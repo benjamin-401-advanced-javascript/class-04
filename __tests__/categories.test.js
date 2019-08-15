@@ -12,14 +12,18 @@ describe('Categories Model', () => {
   it('sanitize() returns undefined with missing requirements', () => {
     const schema = categories.schema;
     var testRecord = {};
-
-    for (var field in schema) {
-      // if this field is required create it with null value
-      if (schema[field].required) {
-        testRecord[field] = null;
-      }
+    const testValues = {
+      string: 'Test String',
+      number: 69,
+      boolean: true,
     }
-    expect(categories.sanitize(testRecord)).toBeUndefined();
+
+    // if this field in schema is required create it with null value
+    for (var field in schema) {
+      testRecord[field] = testValues[schema[field].type];
+    }
+
+    expect(categories.sanitize(testRecord)).toBeDefined();
   });
 
   it('can post() a new category', () => {
@@ -33,20 +37,44 @@ describe('Categories Model', () => {
       .catch(e => console.error('ERR', e));
   });
 
-  it('can delete() a category', () => {
-    //create 3 categories
-    let obj1 = { name: 'Test Category1' };
-    let obj2 = { name: 'Test Category2' };
-    let obj3 = { name: 'Test Category3' };
-    categories.create(obj1);
-    categories.create(obj2);
-    categories.create(obj3);
+  it('can update() a category', () => {
+    const obj1 = { name: 'Test Name1' };
+    const obj2 = { name: 'Test Name2' };
 
-    // delete 1 categorey
-    return categories.delete(categories.database[1].id)
+    // create a category
+    // then update it
+    // then check for updated value
+    categories.create(obj1)
+      .then((record) => {
+        expect(record.name).toEqual(obj1.name);
+        return categories.update(record.id, obj2)
+      })
+      .then((record) => {
+        expect(record.name).toEqual(obj2.name);
+      })
+  });
+
+  it('can delete() a category', () => {
+    const obj1 = { name: 'Test Category1' };
+    const obj2 = { name: 'Test Category2' };
+    const obj3 = { name: 'Test Category3' };
+
+    // create 3 categories
+    // then delete one
+    // then check there's only 2 left
+    categories.create(obj1)
+      .then(() => {
+        return categories.create(obj2);
+      })
+      .then(() => {
+        return categories.create(obj3);
+      })
+      .then(() => {
+        return categories.delete(categories.database[1].id)
+      })
       .then(() => {
         expect(categories.database.length).toEqual(2);
-      })
+      });
 
   });
 

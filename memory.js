@@ -2,6 +2,7 @@
 
 const uuid = require('uuid/v4');
 
+
 class Model {
 
   constructor() {
@@ -37,16 +38,30 @@ class Model {
     let record = {};
 
     Object.keys(this.schema).forEach(field => {
+      // check if entry has all required schema fields
       if (this.schema[field].required) {
+        // check field has value
         if (entry[field]) {
-          record[field] = entry[field];
+          // check type matches schema type
+          if (typeof entry[field] === this.schema[field].type) {
+            // console.log(entry[field], 'typeof', typeof entry[field], '=', this.schema[field].type)
+            record[field] = entry[field];
+          } else {
+            valid = false;
+          }
         } else {
           valid = false;
         }
       }
       else {
-        record[field] = entry[field];
+        // check type matches schema type
+        if (typeof entry[field] === this.schema[field].type) {
+          record[field] = entry[field];
+        } else {
+          valid = false;
+        }
       }
+
     });
 
     return valid ? record : undefined;
